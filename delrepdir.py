@@ -14,4 +14,3 @@ for files in os.listdir(dirname):
                 os.removedirs(codir)
             except OSError:
                 shutil.rmtree(codir)
-
