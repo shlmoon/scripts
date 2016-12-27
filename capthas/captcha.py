@@ -47,7 +47,7 @@ class CaptchaObj(object):
             return ''.join(
                 random.choice(
                     string.ascii_letters + string.digits
-                ) for _ in range(15)
+                ) for _ in range(6)
             )
         code = random.choice(self._get_words())
         self.checkcode = code
