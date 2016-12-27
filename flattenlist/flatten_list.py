@@ -12,7 +12,6 @@ def decorator_1(func):
     return _wrapper
 
 
-@decorator_1
 def genlist_2(lst):
     if not isinstance(lst, Iterable):
         return [lst]
@@ -38,7 +37,6 @@ def genlist_2(lst):
     return genlist_2(reduce(_genlist, lst))
 
 
-@decorator_1
 def genlist(lst):
     if not isinstance(lst, Iterable):
         return [lst]
@@ -58,7 +56,6 @@ def genlist(lst):
     return genlist_2(data)
 
 
-@decorator_1
 def genlist_1(lst):
     if isinstance(lst, Iterable):
         return [t for x in lst for t in genlist_1(x)]
@@ -69,5 +66,5 @@ def genlist_1(lst):
 # lst = [[1], [[2], [[3], [[4], [[5], [[6], [7]]]]]]]
 lst = [1, [2, [3, [4, [5, [6, [7]]]]]]]
 
-print 'genlist', genlist(lst)
-# print 'genlist_2', genlist_2(lst)
+print '\ngenlist: ', decorator_1(genlist)(lst)
+print '\ngenlist_1: ', decorator_1(genlist_1)(lst)
