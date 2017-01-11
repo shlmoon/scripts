@@ -4,6 +4,7 @@ from functools import reduce
 import re
 import os
 import datetime
+import inspect
 
 
 def get_results():
@@ -15,26 +16,15 @@ def get_results():
         return [rex.search(x).groupdict() for x in fg.readlines()]
 
 
+result_list = get_results()
+
+
 class IdCardCheck(object):
 
     def __init__(self, idCard=''):
-        self.result = idCard
-        self.result_list = get_results()
+        self.result = None
         self.region = ''
-        self.checkKeys = ['checkcode', 'date', 'region']
         self.IdCard = idCard
-
-    @property
-    def checkKeys(self):
-        return self._check_keys
-
-    @checkKeys.setter
-    def checkKeys(self, check_keys):
-        if not check_keys:
-            raise ValueError('checkcode must be checked.')
-        if 'idcard' in check_keys:
-            raise ValueError('idcard must not be in check_keys')
-        self._check_keys = check_keys
 
     @property
     def IdCard(self):
@@ -47,9 +37,9 @@ class IdCardCheck(object):
 
     def validate(self, id_card):
         self.validate_idcard(id_card)
-        for key in self.checkKeys:
-            method = getattr(self, 'validate_%s' % key, None)
-            if method:
+        method_lists = inspect.getmembers(self, predicate=inspect.ismethod)
+        for k, method in method_lists:
+            if k.startswith('validate_') and not k == 'validate_idcard':
                 method(id_card)
 
     def validate_idcard(self, id_card):
@@ -102,7 +92,7 @@ class IdCardCheck(object):
 
         region_num = self.result.get('region')
         self.region = filter(
-            lambda x: x.get('code') == region_num, self.result_list
+            lambda x: x.get('code') == region_num, result_list
         )
         return self.region
 
@@ -138,3 +128,7 @@ class IdCardCheck(object):
         if valus == 1:
             return 'Female'
         return 'Male'
+
+
+obj = IdCardCheck('421127199105141930')
+print obj.get_regioninfo()
