@@ -21,9 +21,10 @@ result_list = get_results()
 
 class IdCardCheck(object):
 
-    def __init__(self, idCard=''):
+    def __init__(self, idCard='', ignore_region=False):
         self.result = None
         self.region = ''
+        self.ignore_region = ignore_region
         self.IdCard = idCard
 
     @property
@@ -87,6 +88,7 @@ class IdCardCheck(object):
             )
 
     def _get_region(self):
+        assert self.ignore_region is False
         if self.region:
             return self.region
 
@@ -97,11 +99,14 @@ class IdCardCheck(object):
         return self.region
 
     def validate_region(self, id_card):
-        data = self._get_region()
-        if not data:
-            raise ValueError(
-                'IdCard {idn} region Error.'.format(idn=id_card)
-            )
+        try:
+            data = self._get_region()
+            if not data:
+                raise ValueError(
+                    'IdCard {idn} region Error.'.format(idn=id_card)
+                )
+        except AssertionError:
+            return
 
     def validate_date(self, id_card):
         date = datetime.datetime.strptime(self.result.get('date'), '%Y%m%d')
@@ -113,8 +118,11 @@ class IdCardCheck(object):
             )
 
     def get_regioninfo(self):
-        data = self._get_region()
-        return data[0].get('city')
+        try:
+            data = self._get_region()
+            return data[0].get('city')
+        except AssertionError:
+            raise ValueError('if you want  to get region info.you must set param ignore_region is False')
 
     def get_birthdayinfo(self):
         birthday = self.result.get('date')
@@ -128,7 +136,3 @@ class IdCardCheck(object):
         if valus == 1:
             return 'Female'
         return 'Male'
-
-
-obj = IdCardCheck('421127199105141930')
-print obj.get_regioninfo()
