@@ -89,9 +89,6 @@ class IdCardCheck(object):
 
     def _get_region(self):
         assert self.ignore_region is False
-        if self.region:
-            return self.region
-
         region_num = self.result.get('region')
         self.region = filter(
             lambda x: x.get('code') == region_num, result_list
