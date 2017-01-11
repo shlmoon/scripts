@@ -115,11 +115,8 @@ class IdCardCheck(object):
             )
 
     def get_regioninfo(self):
-        try:
-            data = self._get_region()
-            return data[0].get('city')
-        except AssertionError:
-            raise ValueError('if you want  to get region info.you must set param ignore_region is False')
+        data = self._get_region()
+        return data[0].get('city')
 
     def get_birthdayinfo(self):
         birthday = self.result.get('date')
