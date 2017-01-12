@@ -24,6 +24,9 @@ class IdCardCheck(object):
     def __init__(self, idCard='', ignore_region=False):
         self.result = None
         self.region = ''
+        if not isinstance(ignore_region, bool):
+            raise ValueError('kwargs ignore_region must be bool')
+
         self.ignore_region = ignore_region
         self.IdCard = idCard
 
@@ -96,14 +99,14 @@ class IdCardCheck(object):
         return self.region
 
     def validate_region(self, id_card):
-        try:
-            data = self._get_region()
-            if not data:
-                raise ValueError(
-                    'IdCard {idn} region Error.'.format(idn=id_card)
-                )
-        except AssertionError:
+        if self.ignore_region:
             return
+
+        data = self._get_region()
+        if not data:
+            raise ValueError(
+                'IdCard {idn} region Error.'.format(idn=id_card)
+            )
 
     def validate_date(self, id_card):
         date = datetime.datetime.strptime(self.result.get('date'), '%Y%m%d')
