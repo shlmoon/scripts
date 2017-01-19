@@ -1,25 +1,14 @@
 # coding: utf-8
+from __future__ import absolute_import
 
 from functools import reduce
 import re
-import os
+
 import datetime
 import inspect
 
 
-def get_results():
-    current_file = os.getcwd()
-    filepath = '%s/region.txt' % current_file
-    reg = r'(?P<code>.*?): (?P<city>.*)'
-    rex = re.compile(reg)
-    with open(filepath) as fg:
-        return [rex.search(x).groupdict() for x in fg.readlines()]
-
-
-result_list = get_results()
-
-
-class IdCardCheck(object):
+class IdCardClass(object):
 
     def __init__(self, idCard='', ignore_region=False):
         self.result = None
@@ -92,6 +81,7 @@ class IdCardCheck(object):
 
     def _get_region(self):
         assert self.ignore_region is False
+        from regiondict import result_list
         region_num = self.result.get('region')
         self.region = filter(
             lambda x: x.get('code') == region_num, result_list
