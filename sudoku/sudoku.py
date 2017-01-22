@@ -46,24 +46,6 @@ class Sudoku(object):
             for cols in ('123', '456', '789'):
                 self._pruning(rows, cols, func)
 
-    def compute(self, area):
-        options = dict()
-        for val in area.values():
-            options[val] = options.setdefault(val, 0) + 1
-
-        for option, freq in options.iteritems():
-            optlen = len(option)
-            if optlen == freq:
-                for loc in area.keys():
-                    selfloc = self.result[loc]
-                    if selfloc != option:
-                        for opt in option:
-                            if opt in selfloc:
-                                selfloc = selfloc.replace(opt, '')
-                        self.result[loc] = selfloc
-            elif optlen < freq:
-                raise SudokuException("Puzzle is not solvable")
-
     def complexity(self):
         return len(''.join(self.result.values()))
 
@@ -72,37 +54,65 @@ class Sudoku(object):
         return self.complexity() == GIRDCOUNT
 
     def simplify(self):
+        def _simplify(area):
+            options = dict()
+            for val in area.values():
+                options[val] = options.setdefault(val, 0) + 1
+
+            for option, freq in options.items():
+                optlen = len(option)
+                if optlen == freq:
+                    for loc in area.keys():
+                        selfloc = self.result[loc]
+                        if selfloc != option:
+                            for opt in option:
+                                if opt in selfloc:
+                                    selfloc = selfloc.replace(opt, '')
+                            self.result[loc] = selfloc
+                elif optlen < freq:
+                    raise SudokuException("Puzzle is not solvable")
+
         after, before = self.complexity(), 0
-        while before != after:
-            self.Pruning(self.compute)
+        while not before == after:
+            self.Pruning(_simplify)
             after, before = self.complexity(), after
         return self.solved()
 
-    def sudoku(self):
-        if self.simplify():
-            return
+    def _sudoku(self):
         minopt = 2
+        result_stack = []
         while minopt < 10:
-            ceil, opts = None, None
+            minopt_flag = False
             for ceil, opts in self.result.items():
                 if len(opts) == minopt:
+                    minopt_flag = True
                     break
-            if not ceil:
+            if not minopt_flag:
                 minopt += 1
                 continue
-            data = {k: v for k, v in self.result.items()}
+
+            result = {k: v for k, v in self.result.items()}
+            if result not in result_stack:
+                result_stack.append(result)
+
             for opt in opts:
-                data = {k: v for k, v in self.result.items()}
                 self.result[ceil] = opt
                 try:
                     if self.simplify():
                         return
+                    minopt = 2
                     break
                 except SudokuException:
-                    self.result = data
+                    self.result = result_stack.pop()
 
-    def output_string(self):
-        self.sudoku()
+    def sudoku(self):
+        if self.simplify():
+            return
+        self._sudoku()
+
+    def output_string(self, has_simply=False):
+        if not has_simply:
+            self.sudoku()
 
         def _genRowResult(row):
             return ' '.join(
@@ -115,3 +125,19 @@ class Sudoku(object):
     def output_result(self):
         self.sudoku()
         return self.result
+
+
+sudo = Sudoku(
+    """
+    000 045 006
+    400 096 507
+    050 000 409
+    900 000 300
+    500 003 900
+    000 000 000
+    000 030 600
+    000 000 005
+    000 000 003
+    """
+)
+print sudo.output_string()
