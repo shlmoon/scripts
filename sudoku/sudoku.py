@@ -1,40 +1,117 @@
 # coding: utf-8
-import random
+import re
+
+GIRDCOUNT = 81
+ROWS = 'ABCDEFGHI'
+COLS = '123456789'
 
 
-class Node(object):
-    """docstring for Node"""
-    def __init__(self, x, y):
-        if not isinstance(x, int) or not isinstance(y, int):
-            raise ValueError('Node must be int')
-        if x > 9 or x <= 0 or y > 9 or y <= 0:
-            raise ValueError('Node must be in 0, 9')
-        self.x = x
-        self.y = y
+class SudokuException(Exception):
+    """ Exception raised when puzzle is not solvable"""
+    pass
 
 
 class Sudoku(object):
-    """docstring for Sudoku"""
-    def __init__(self, node_list):
-        for node in node_list:
-            if not isinstance(node, Node):
-                raise ValueError('node Error')
-        self.node_list = node_list
-        self.node_all = [
-            [node.y for node in node_list if node.x == i] for i in range(1, 10)
-        ]
-        self.node_count = [len(self.node_all[i]) for i in range(1, 10)]
+    """docstring for Sudoku
+    puzzle like:
+    ... .9. .64
+    ... ..3 .2.
+    ... ..1 7..
+    ..1 ... ...
+    ..9 ... ...
+    ... 9.7 64.
+    ... 37. ..6
+    ... .2. .78
+    .1. 8.5 29.
+    """
+    def __init__(self, puzzle):
+        puzzle = re.sub(r'[^0-9\.]', '', puzzle)
+        if not len(puzzle) == GIRDCOUNT:
+            raise ValueError('Puzzle must contain 9*9 digits')
+        self.result = {
+            '%s%s' % (ROWS[ceil % 9], COLS[ceil / 9]): val if not val in '0.' else '123456789' for ceil, val in enumerate(puzzle)
+        }
 
-    def run(self):
-        match_list = [x for x in range(1, 10)]
-        for i in range(1, 10):
-            unexact_list = self.node_all[i]
-            count = len(unexact_list)
-            if not count == 9:
-                value = random.choice(list(set(match_list) - set(unexact_list)))
+    def _pruning(self, rows, cols, func):
+        """ Perform given function on a given set of cells """
+        area = {'%s%s' % (row, col): self.result[row + col] for row in rows for col in cols}
+        func(area)
 
-        pass
+    def Pruning(self, func):
+        for row in ROWS:
+            self._pruning(row, COLS, func)
+        for col in COLS:
+            self._pruning(ROWS, col, func)
+        for rows in ('ABC', 'DEF', 'GHI'):
+            for cols in ('123', '456', '789'):
+                self._pruning(rows, cols, func)
 
-    @staticmethod
-    def generator_sudoku(cls, lst):
-        return cls.__new__(cls, [Node(x, y) for x, y in lst])
+    def compute(self, area):
+        options = dict()
+        for val in area.values():
+            options[val] = options.setdefault(val, 0) + 1
+
+        for option, freq in options.iteritems():
+            optlen = len(option)
+            if optlen == freq:
+                for loc in area.keys():
+                    selfloc = self.result[loc]
+                    if selfloc != option:
+                        for opt in option:
+                            if opt in selfloc:
+                                selfloc = selfloc.replace(opt, '')
+                        self.result[loc] = selfloc
+            elif optlen < freq:
+                raise SudokuException("Puzzle is not solvable")
+
+    def complexity(self):
+        return len(''.join(self.result.values()))
+
+    def solved(self):
+        """ Check if puzzle is solved """
+        return self.complexity() == GIRDCOUNT
+
+    def simplify(self):
+        after, before = self.complexity(), 0
+        while before != after:
+            self.Pruning(self.compute)
+            after, before = self.complexity(), after
+        return self.solved()
+
+    def sudoku(self):
+        if self.simplify():
+            return
+        minopt = 2
+        while minopt < 10:
+            ceil, opts = None, None
+            for ceil, opts in self.result.items():
+                if len(opts) == minopt:
+                    break
+            if not ceil:
+                minopt += 1
+                continue
+            data = {k: v for k, v in self.result.items()}
+            for opt in opts:
+                data = {k: v for k, v in self.result.items()}
+                self.result[ceil] = opt
+                try:
+                    if self.simplify():
+                        return
+                    break
+                except SudokuException:
+                    self.result = data
+
+    def output_string(self):
+        self.sudoku()
+
+        def _genRowResult(row):
+            return ' '.join(
+                [self.result[row + col] for col in COLS]
+            )
+        _result = [_genRowResult(row) for row in ROWS]
+        _result = '\n'.join(_result)
+        return '''%s''' % _result
+
+    def output_result(self):
+        self.sudoku()
+        return self.result
