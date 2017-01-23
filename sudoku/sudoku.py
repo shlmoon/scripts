@@ -92,8 +92,7 @@ class Sudoku(object):
                 continue
 
             result = {k: v for k, v in self.result.items()}
-            if result not in result_stack:
-                result_stack.append(result)
+            result_stack.append(result)
 
             for opt in opts:
                 self.result[ceil] = opt
@@ -104,6 +103,7 @@ class Sudoku(object):
                     break
                 except SudokuException:
                     self.result = result_stack.pop()
+        del result_stack[:]
 
     def sudoku(self):
         if self.simplify():
