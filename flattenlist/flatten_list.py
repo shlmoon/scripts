@@ -13,9 +13,6 @@ def decorator_1(func):
 
 
 def genlist_2(lst):
-    if not isinstance(lst, Iterable):
-        return [lst]
-
     def _checkend(lst):
         for x in lst:
             if isinstance(x, Iterable):
@@ -38,9 +35,6 @@ def genlist_2(lst):
 
 
 def genlist(lst):
-    if not isinstance(lst, Iterable):
-        return [lst]
-
     def _genlist(v1, v2):
         if isinstance(v1, Iterable) and isinstance(v2, Iterable):
             return v1 + v2
